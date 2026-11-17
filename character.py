@@ -1,67 +1,53 @@
 class Character:
+    """Base class shared by the player and all enemies."""
 
-    def __init__ (self, name, health, attack_damage, defence):
+    def __init__(self, name, health, attack_damage, defence):
         self.name = name
+        self.max_health = health
         self.health = health
         self.attack_damage = attack_damage
         self.defence = defence
 
-    def status(self):
-        return(
-            f"Character: {self.name}\n"
-            f"Health: {self.health}\n"
-            f"Attack: {self.attack_damage}\n"
-            f"Defence: {self.defence}\n"
-        )
-
-    def attack(self, target):
-        print(f"{self.name} attacks {target.name}!")
-        target.take_damage(self.attack_damage)
-        print(f"{target.name} has {target.health} health remaining")
+    def is_alive(self):
+        return self.health > 0
 
     def take_damage(self, damage):
-        incoming_damage = damage
-        actual_damage = max(0, incoming_damage - self.defence)
-        self.health -= actual_damage
-        print(f"{self.name} takes {actual_damage} damage")
-        return self.health
+        actual_damage = max(0, damage - self.defence)
+        self.health = max(0, self.health - actual_damage)
+        print(f"{self.name} takes {actual_damage} damage.")
 
-class Player(Character):
-    def __init__(self, name, health, attack_damage, defence, level, xp):
-        super().__init__(name, health, attack_damage, defence)
-        self.__level = 1
-        self.__xp = 0
+        if not self.is_alive():
+            print(f"{self.name} has been defeated!")
 
-    def gain_xp(self, amount):
-        self.xp += amount
+        return actual_damage
 
-    def show_progress(self):
-        print(f"Players Level: {self.__level}, XP: {self.__xp}")
+    def attack(self, target):
+        if not self.is_alive():
+            print(f"{self.name} cannot attack because they are defeated.")
+            return
 
-class Enemy(Character):
-    def __init__(self, name, health, attack_damage, defence):
-        super().__init__(name, health, attack_damage, defence)
+        if not target.is_alive():
+            print(f"{target.name} is already defeated.")
+            return
 
-class Dragon(Enemy):
-    def __init__(self, name, health, attack_damage, defence):
-        super().__init__(name, health, attack_damage, defence)
-
-    def attack(self,target):
-        print("Dragon unleased a powerfull attack!!!")
+        print(f"{self.name} attacks {target.name}!")
         target.take_damage(self.attack_damage)
-        
 
-player = Player("Sagar", 80, 20, 50, 1000, 1000000)
-skeleton = Enemy("Skeleton", 30, 20, 10)
-dragon = Dragon("Dragon", 100, 40, 20)
+    def heal(self, amount):
+        if not self.is_alive():
+            print(f"{self.name} cannot be healed because they are defeated.")
+            return 0
 
-print(player.status())
-print(skeleton.status())
-print(dragon.status())
+        old_health = self.health
+        self.health = min(self.max_health, self.health + amount)
+        healed = self.health - old_health
+        print(f"{self.name} restores {healed} HP.")
+        return healed
 
-print("-------------------Attack-------------------")
-
-skeleton.attack(player)
-dragon.attack(player)
-
-player.show_progress()
+    def status(self):
+        return (
+            f"{self.name}\n"
+            f"HP: {self.health}/{self.max_health}\n"
+            f"Attack: {self.attack_damage}\n"
+            f"Defence: {self.defence}"
+        )
